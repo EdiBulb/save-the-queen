@@ -1,0 +1,8 @@
+// Cloudflare 설정: 게임 화면(HTML, JS)을 정적 파일로 올린다. 게임 서버는 Render에 따로 있다.
+{
+  "name": "save-the-queen",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "."
+  }
+}
