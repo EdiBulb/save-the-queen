@@ -41,10 +41,10 @@ node test/player.js    # 가상 플레이어 vs AI
 **방법 2 — 화면은 Cloudflare, 게임 서버는 Render (할리갈리와 같은 구성)**
 
 1. 위와 같이 Render에 게임 서버를 올린다.
-2. `config.js`를 `window.STQ_SERVER = 'wss://(Render 주소)';`로 바꾼다.
+2. `config.js`의 `window.STQ_SERVER`가 Render 주소(`wss://save-the-queen.onrender.com`)인지 확인한다. 주소가 다르면 바꾼다.
 3. Cloudflare Pages에 이 저장소를 정적 사이트로 올린다 (빌드 명령 없음, 출력 폴더는 최상위).
 
-화면은 바로 뜨고, 방 만들기를 누를 때 "서버를 깨우는 중"이 잠깐 보인다.
+화면은 바로 뜬다. 페이지를 여는 순간 잠든 서버를 미리 깨우고, 방 만들기를 눌렀을 때 아직 자고 있으면 "벌들을 깨우는 중" 화면이 나온다. Render에서 화면을 직접 받을 때는 서버가 `config.js` 대신 '같은 주소'를 알려 주므로 그대로 둬도 된다.
 
 ## 같이 하기의 규칙
 
