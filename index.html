@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>여왕을 지켜라 — 프로토타입</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap">
+<style>
+  html, body { margin: 0; height: 100%; background: #3a2410; overflow: hidden; }
+  #game { width: 100vw; height: 100vh; height: 100dvh; touch-action: none; -webkit-user-select: none; user-select: none; }
+
+  /* 메뉴 · 대기실 · 게임 방법 */
+  #ui { position: fixed; inset: 0; overflow-y: auto; display: flex; align-items: flex-start; justify-content: center;
+        background: #8a5a1e; font-family: "Do Hyeon", system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; color: #3a2410; }
+  #ui[hidden], #ui [hidden] { display: none; }
+  .panel { box-sizing: border-box; width: min(440px, 94vw); margin: 16px 0; padding: 16px; background: #fff3d0; border: 4px solid #3a2410; box-shadow: 0 6px 0 #4e3017; }
+  .panel h1 { margin: 0 0 4px; font-size: 34px; font-weight: 400; text-align: center; }
+  .panel h2 { margin: 0 0 10px; font-size: 24px; font-weight: 400; }
+  .sub { margin: 0 0 14px; text-align: center; font-size: 16px; color: #7a5a36; }
+  .row { display: flex; gap: 8px; margin-top: 10px; }
+  label { display: block; margin-top: 10px; font-size: 16px; }
+  input { box-sizing: border-box; width: 100%; min-height: 46px; padding: 0 10px; font: inherit; font-size: 20px; color: #3a2410; background: #fff; border: 3px solid #3a2410; border-radius: 0; }
+  #code { text-transform: uppercase; letter-spacing: 4px; text-align: center; }
+  button { flex: 1; min-height: 48px; padding: 0 12px; font: inherit; font-size: 20px; color: #3a2410; background: #ffe27a; border: 3px solid #3a2410; border-bottom-width: 6px; border-radius: 0; cursor: pointer; }
+  button:active { border-bottom-width: 3px; transform: translateY(3px); }
+  button.main { background: #f5a623; }
+  button.plain { background: #fff3d0; }
+  button:disabled { color: #9a8566; background: #eadfc0; border-color: #9a8566; cursor: default; }
+  #status { min-height: 22px; margin: 12px 0 0; font-size: 16px; color: #c2362f; text-align: center; }
+  #roomCode { font-size: 56px; letter-spacing: 8px; text-align: center; line-height: 1.1; }
+  #qr { display: flex; justify-content: center; margin: 8px 0; }
+  #qr img { width: 168px; height: 168px; image-rendering: pixelated; border: 3px solid #3a2410; background: #fff; }
+  #link { font-size: 13px; }
+  #players { margin: 10px 0 0; padding: 0; list-style: none; }
+  #players li { display: flex; align-items: center; gap: 8px; min-height: 40px; margin-top: 6px; padding: 0 10px; font-size: 20px; background: #fff; border: 3px solid #3a2410; }
+  #players li.empty { color: #9a8566; border-style: dashed; background: none; }
+  .dot { width: 16px; height: 16px; border: 3px solid #3a2410; }
+  .tag { margin-left: auto; font-size: 15px; color: #7a5a36; }
+  #guide ol { margin: 0; padding-left: 24px; font-size: 17px; line-height: 1.45; }
+  #guide li { margin-bottom: 8px; }
+  #guide b { font-weight: 400; background: #ffe27a; padding: 0 3px; }
+  .tip { margin: 10px 0 0; padding: 8px 10px; font-size: 16px; background: #fff; border: 3px solid #3a2410; }
+</style>
+</head>
+<body>
+<div id="game"></div>
+
+<div id="ui">
+  <!-- 처음 화면 -->
+  <section class="panel" id="menu">
+    <h1>여왕을 지켜라</h1>
+    <p class="sub">벌집을 키우고, 여왕을 지키고, 남의 벌집을 털어요</p>
+    <button class="main" id="solo" style="width:100%">혼자 하기 (AI 2명과)</button>
+    <label for="name">내 이름 (친구들에게 보여요)</label>
+    <input id="name" maxlength="10" autocomplete="off" placeholder="해리">
+    <div class="row"><button id="create">방 만들기</button></div>
+    <label for="code">친구가 알려준 방 코드</label>
+    <div class="row">
+      <input id="code" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="ABCD" style="flex:1.2">
+      <button id="join">들어가기</button>
+    </div>
+    <div class="row"><button class="plain" id="howto">게임 방법</button></div>
+    <p id="status" role="status"></p>
+  </section>
+
+  <!-- 대기실 -->
+  <section class="panel" id="lobby" hidden>
+    <h2>대기실</h2>
+    <p class="sub" style="margin-bottom:4px">친구에게 이 코드나 QR을 보여 주세요</p>
+    <div id="roomCode"></div>
+    <div id="qr"></div>
+    <div class="row" style="margin-top:0"><input id="link" readonly aria-label="초대 링크"><button id="copy" style="flex:0 0 96px">복사</button></div>
+    <ul id="players"></ul>
+    <div class="row"><button class="main" id="start">게임 시작</button></div>
+    <div class="row"><button class="plain" id="leave">나가기</button></div>
+    <p class="sub" id="lobbyNote" style="margin:12px 0 0"></p>
+  </section>
+
+  <!-- 게임 방법 -->
+  <section class="panel" id="guide" hidden>
+    <h2>게임 방법</h2>
+    <ol>
+      <li><b>목표</b> 내 여왕을 지키고, 다른 벌집을 모두 무너뜨리면 이겨요.</li>
+      <li><b>칸 짓기</b> 오른쪽 아래 ‘벌집’을 누르고 빈 자리(+)를 누르세요. 칸이 있어야 여왕이 알을 낳아요.</li>
+      <li><b>벌에게 일 시키기</b> 아래 역할 버튼을 누른 채 다른 역할로 끌어다 놓으면 벌이 한 마리 옮겨져요. 채집은 꿀을, 육아는 애벌레를, 짓기는 칸을 맡아요.</li>
+      <li><b>수비</b> 벌 4마리 중 1마리는 수비에 두세요. 화면 테두리가 빨갛게 깜빡이면 공격받는 중이에요.</li>
+      <li><b>공격</b> 공격 버튼을 상대 벌집으로 끌어다 놓으면 출발하고, 내 벌집에 놓으면 돌아와요.</li>
+      <li><b>꽃이 져요</b> 기본 꽃밭은 6분, 가운데 큰 꽃밭은 9분에 져요. 그 뒤엔 남의 벌집을 털어야 꿀이 생겨요.</li>
+    </ol>
+    <p class="tip">두 손가락을 벌리면 확대돼요. 폰을 가로로 돌려서 하세요.</p>
+    <div class="row"><button class="main" id="guideOk">알겠어요</button></div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="config.js"></script>
+<script src="src/sim.js"></script>
+<script src="src/net.js"></script>
+<script src="src/sfx.js"></script>
+<script src="src/main.js"></script>
+<script src="src/lobby.js"></script>
+</body>
+</html>

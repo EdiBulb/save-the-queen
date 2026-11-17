@@ -1,0 +1,12 @@
+{
+  "name": "save-the-queen",
+  "version": "0.1.0",
+  "private": true,
+  "description": "여왕을 지켜라 — 벌집을 키우고 지키는 모바일 실시간 전략 게임",
+  "scripts": {
+    "start": "node server/server.js",
+    "test": "node test/sim.test.js && node test/net.test.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": { "ws": "^8.18.0" }
+}
